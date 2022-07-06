@@ -1,0 +1,7 @@
+Package: astra-test
+Version: 0.2
+Section: unknown
+Architecture: all
+Priority: optional
+Maintainer: Afanasiev Anatoly <atsip76@gmail.com>
+Description: Тестовое задание на собеседовании
