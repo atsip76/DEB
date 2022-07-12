@@ -31,14 +31,15 @@ aptly mirror create -architectures=amd64 -with-sources -filter="Priority (requir
 #Обновляем кеш
 aptly mirror update byllseye-main
 #Узнаем все зависимости пакетов, удаляем пробелы, все номера версий в скобках
-rm ~/dep 
+rm ~/DEPENDS
 for i in ${pkg[*]};
-do aptly package show $i |grep Depends |awk  '{$1=""; print $0}' |sed s/' '//g | sed 's/([^)]*)//g' | sed 's/<[^>]*>//g' | sed 's/\[[^)]*\]//g' | sed 's/libselinux-dev/libselinux1-dev/' >> ~/dep;
+do aptly package show $i |grep Depends |awk  '{$1=""; print $0}' |sed s/' '//g | sed 's/([^)]*)//g' | sed 's/<[^>]*>//g' | sed 's/\[[^)]*\]//g' | sed 's/libselinux-dev/libselinux1-dev/' >> ~/DEPENDS;
 done
-#формируем упорядоченный файл зависимостей dep для сбoрки окружения в debootstrap bullseye
-array=($(cat dep | tr "," "\n")) | for i in "${my_array[@]}"; do echo $i; done | sort |uniq > dep
+#формируем упорядоченный файл зависимостей DEPEND для сбoрки окружения в debootstrap bullseye
+array=($(cat ~/DEPENDS | tr "," "\n"))
+for i in "${array[@]}"; do echo $i; done | sort |uniq > DEPENDS
 #присвоение переменной DEP строки из файла зависимостей dep с удалением перводов строк, замена на ,(формируем непрерывную строку)
-DEP=$(cat dep | tr '\n ' ',')
+DEP=$(cat DEPENDS | tr '\n ' ',')
 #Готoвим debootstrap bullseye для сборки в дире ~/test со всеми необходимыми зависимостями и утилитами построения пакетов из исходников (devscripts)
 debootstrap --variant=buildd --components=main,contrib,non-free --include=build-essential,adduser,fakeroot,devscripts,$DEP --arch=amd64 bullseye ~/test http://mirror.yandex.ru/debian/
 #добавляем список адресаов источников репозиториев пакетов и сырцов в apt
@@ -78,7 +79,6 @@ done
 mv ~/test/opt/deb/*.deb ~/deb/
 mv ~/test/opt/deb/*.changes ~/deb/
 mv ~/test/opt/deb/*.buildinfo ~/deb/
-mv ~/test/opt/deb/*.dsc ~/deb/
 #проверяем пакеты на типичные ошибки в структуре
 #cd ~/DEB/
 #lintian *.deb
