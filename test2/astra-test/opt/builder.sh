@@ -30,13 +30,14 @@ gpg --no-default-keyring --keyring /usr/share/keyrings/debian-archive-keyring.gp
 aptly mirror create -architectures=amd64 -with-sources -filter="Priority (required) | Priority (important) | Priority (standard) | ${pkg[0]} | ${pkg[1]} | ${pkg[2]}" -filter-with-deps byllseye-main http://ftp.ru.debian.org/debian/ bullseye main
 #Обновляем кеш
 aptly mirror update byllseye-main
-#Узнаем все зависимости пакетаов, удаляем пробелы, все номера версий в скобках, формируем единый список зависимостей пакетов для сборки
-#сформированный и упорядоченный список зависимостей сохраняем в файле dep для сбoрки окружения в debootstrap bullseye
+#Узнаем все зависимости пакетов, удаляем пробелы, все номера версий в скобках
 rm ~/dep 
 for i in ${pkg[*]};
 do aptly package show $i |grep Depends |awk  '{$1=""; print $0}' |sed s/' '//g | sed 's/([^)]*)//g' | sed 's/<[^>]*>//g' | sed 's/\[[^)]*\]//g' | sed 's/libselinux-dev/libselinux1-dev/' >> ~/dep;
 done
-#присвоение переменной DEP строки из файла зависимостей dep с удалением перводов строк (формируем непрерывную строку)
+#формируем упорядоченный файл зависимостей dep для сбoрки окружения в debootstrap bullseye
+array=($(cat dep | tr "," "\n")) | for i in "${my_array[@]}"; do echo $i; done | sort |uniq > dep
+#присвоение переменной DEP строки из файла зависимостей dep с удалением перводов строк, замена на ,(формируем непрерывную строку)
 DEP=$(cat dep | tr '\n ' ',')
 #Готoвим debootstrap bullseye для сборки в дире ~/test со всеми необходимыми зависимостями и утилитами построения пакетов из исходников (devscripts)
 debootstrap --variant=buildd --components=main,contrib,non-free --include=build-essential,adduser,fakeroot,devscripts,$DEP --arch=amd64 bullseye ~/test http://mirror.yandex.ru/debian/
