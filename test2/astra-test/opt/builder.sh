@@ -17,13 +17,14 @@
 #      REVISION: 0.1
 #===============================================================================
 set -o nounset                              # Treat unset variables as an error
+sudo apt update && sudo apt upgrade -y
 cd ~
 mkdir deb #создаем директорию для собранных пакетов, логов, метафайлов
 #назначаем приложения для сборки помещая их в массив pkg
 pkg=("bash" "gawk" "sed")
 #устанавливаем aptly "швейцарский нож" для создания локальных репозиториев, зеркал и снимков
-#устанавливаем инструмент для проверки пакетов на предмет ошибок и соответствия стандартам (lintian)
-apt install aptly lintian
+#устанавливаем инструмент для проверки пакетов на предмет ошибок и прочие необходимые инструменты
+apt install -y aptly lintian gnupg wget git mc debootstrap
 #импортируем связку ключей Debian по умолчанию
 gpg --no-default-keyring --keyring /usr/share/keyrings/debian-archive-keyring.gpg --export | gpg --no-default-keyring --keyring trustedkeys.gpg --import
 #создаем cache нужных приложений для сборки (bash gawk aptly) из массива pkg
